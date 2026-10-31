@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+._*
+
+# 講座配布資料と提出用レポート
+*.pdf
+
+# 秘密情報
+.env
+.env.*
+rclone.conf
