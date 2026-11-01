@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" font-family="Hiragino Sans, sans-serif">
+<rect x="150" y="460" width="1140" height="150" fill="#b2af8f" opacity=".32"/>
+<text x="166" y="506" font-size="30" font-weight="600" fill="#3f3e30">14〜20cm</text>
+<text x="166" y="548" font-size="26" fill="#3f3e30">計画が安定</text>
+<rect x="150" y="660" width="1140" height="100" fill="#c9c9c9" opacity=".55"/>
+<text x="166" y="702" font-size="30" font-weight="600" fill="#333">8〜12cm</text>
+<text x="166" y="742" font-size="26" fill="#333">突っ込み側の誤差が最大</text>
+<line x1="150" y1="960" x2="1290" y2="960" stroke="#111" stroke-width="3"/>
+<text x="166" y="1002" font-size="24" fill="#555">対象物の把持高さ</text>
+<circle cx="1178" cy="994" r="10" fill="#fff" stroke="#111" stroke-width="4"/>
+<text x="1200" y="1002" font-size="24" fill="#555">推論</text>
+<text x="620" y="359" font-size="36" font-weight="600" text-anchor="middle" fill="#111">対策なし</text>
+<line x1="620" y1="410" x2="620" y2="952" stroke="#111" stroke-width="5"/>
+<circle cx="620" cy="410" r="11" fill="#fff" stroke="#111" stroke-width="4"/><circle cx="620" cy="497.5" r="11" fill="#fff" stroke="#111" stroke-width="4"/><circle cx="620" cy="585" r="11" fill="#fff" stroke="#111" stroke-width="4"/><circle cx="620" cy="672.5" r="11" fill="#fff" stroke="#111" stroke-width="4"/><circle cx="620" cy="760" r="11" fill="#fff" stroke="#111" stroke-width="4"/><circle cx="620" cy="847.5" r="11" fill="#fff" stroke="#111" stroke-width="4"/><circle cx="620" cy="935" r="11" fill="#fff" stroke="#111" stroke-width="4"/>
+<text x="656" y="856.5" font-size="26" fill="#333">距離によらず再推論</text>
+<text x="1010" y="359" font-size="36" font-weight="600" text-anchor="middle" fill="#111">対策あり</text>
+<line x1="1010" y1="410" x2="1010" y2="560" stroke="#111" stroke-width="5"/>
+<line x1="1010" y1="560" x2="1010" y2="946" stroke="#8d8a66" stroke-width="16"/>
+<path d="M988 936 L1010 960 L1032 936 Z" fill="#8d8a66"/>
+<circle cx="1010" cy="410" r="11" fill="#fff" stroke="#111" stroke-width="4"/><circle cx="1010" cy="497.5" r="11" fill="#fff" stroke="#111" stroke-width="4"/>
+<rect x="993" y="543" width="34" height="34" fill="#111" transform="rotate(45 1010 560)"/>
+<text x="1050" y="554" font-size="26" font-weight="600" fill="#111">ここで推論を固定</text>
+<text x="1050" y="590" font-size="24" fill="#333">（最下点まで 16cm）</text>
+<text x="1050" y="839.5" font-size="26" fill="#333">再推論なしで</text>
+<text x="1050" y="877.5" font-size="26" fill="#333">把持まで実行</text>
+</svg>

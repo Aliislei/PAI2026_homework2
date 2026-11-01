@@ -9,3 +9,7 @@
 .env
 .env.*
 rclone.conf
+
+# 実行結果
+*.mp4
+results/

@@ -16,6 +16,7 @@ Colab の VM は手元から `colab` CLI で操作する。Drive とのやり取
 colab new --gpu G4 -s pai
 
 colab upload -s pai ~/.config/rclone/rclone.conf /content/rclone.conf
+colab upload -s pai scripts/rollout.py /content/rollout.py
 
 colab exec -s pai --timeout 3600 -f notebooks/collect_and_analyze.ipynb
 ```
@@ -38,6 +39,7 @@ colab sessions
 ## 注意点
 
 - `colab exec` は無出力が続くと手元側がタイムアウトする。カーネル側の処理は続く
+- `colab exec` はセルが失敗しても次へ進み、終了コード 0 を返す。結果はログのエラーで判定する。失敗しても最後のセルが認証ファイルを消すので、再実行では `rclone.conf` をアップロードし直す
 - `drive.mount` は CLI では使わない
 - proxy token の寿命は 1 時間で、長い実行では VM が回収されることがある。回収されても、Drive のアーカイブから続きを実行できる
 - 小さなファイルを大量に転送しない。結果は 1 個のアーカイブにまとめる

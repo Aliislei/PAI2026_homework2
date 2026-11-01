@@ -42,7 +42,8 @@ Physical AI 応用編1 講座の最終課題「AI×ロボティクスによる�
 - **Colab の用途**: データ収集と動画作成
 - **データのやり取り**: rclone で Google Drive を経由する。保存先は `remote:pai_homework2/`
 - **VM**: `colab` CLI で G4 を操作する。手順は `doc/colab_vm.md` を参照する。使い終わったら必ず `colab stop` する
-- **ノートブック**: `notebooks/collect_and_analyze.ipynb`（データ収集、分析、問題ロールアウト抽出）
+- **共通処理**: `scripts/rollout.py`（モデル、環境、ロールアウト、対策）
+- **ノートブック**: `notebooks/collect_and_analyze.ipynb`（データ収集、分析、問題抽出）、`notebooks/atomic_compare.ipynb`（対策の比較）、`notebooks/render_videos.ipynb`（動画作成）
 
 ## 実装方針
 

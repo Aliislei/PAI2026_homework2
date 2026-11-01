@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>説明資料 PAI最終課題</title>
+<style>
+  @page { size: A4; margin: 14mm 17mm; }
+  body { font-family: "Hiragino Sans", sans-serif; font-size: 9.7pt; line-height: 1.56; color: #111; }
+  h1 { font-size: 17pt; line-height: 1.35; margin: 0 0 2mm; }
+  .sub { color: #555; font-size: 9pt; margin-bottom: 5mm; }
+  h2 { font-size: 12pt; margin: 6mm 0 1.5mm; padding-left: 2.5mm; border-left: 1.2mm solid #b2af8f; break-after: avoid; }
+  p { margin: 1.2mm 0; }
+  ul, ol { margin: 1.2mm 0; padding-left: 5.5mm; }
+  li { margin: .6mm 0; }
+  table { border-collapse: collapse; width: 100%; margin: 2mm 0; font-size: 9pt; break-inside: avoid; }
+  th, td { border-bottom: .25mm solid #ccc; padding: 1mm 1.6mm; text-align: left; }
+  th { background: #f1f0e8; font-weight: 600; }
+  td.n, th.n { text-align: right; }
+  figure { margin: 2.5mm 0; break-inside: avoid; text-align: center; }
+  figure img { width: 100%; }
+  figure.half { width: 64%; margin-left: auto; margin-right: auto; }
+  figcaption { color: #555; font-size: 8.5pt; }
+  .pair { display: flex; gap: 2mm; }
+  .pair img { width: 50%; }
+  code { font-family: Menlo, monospace; font-size: 8.5pt; }
+</style>
+</head>
+<body>
+
+<h1>推論高さに着目した pi0.5 のアプローチ改善<br>リストカメラの距離感と再推論の固定</h1>
+<div class="sub">Physical AI 応用編 1 最終課題 説明資料（受講者個人の取り組み）</div>
+
+<h2>1. 概要</h2>
+<p>深度画像を持たない VLA モデル pi0.5 の Libero チューニング済みモデル（<code>lerobot/pi05_libero_finetuned_v044</code>）を対象に、対象物へのアプローチ中の推論が距離をどれだけ正しく捉えているかを 1000 ロールアウトで測定した。測定から、計画の信頼できる距離帯があることと、手先が止まった後も下降指令が続く「過剰下降」を確認した。対策として、方策自身の計画から推論を固定する機能を実装した。机上の物体タスクでは過剰下降が減り、棚のタスクでは悪化した。</p>
+
+<h2>2. 目的と仮説</h2>
+<p>pi0.5 は、対象物との距離を主にリストカメラ画像の物体スケールから推定していると推測した。その場合、推定の信頼できる距離には偏りがあるはずだが、どの距離で推論が入るかは推論間隔の都合で決まり、選べない。そこで次の仮説を立てた。</p>
+<ul>
+  <li>下降量の計画が最も正確になる距離の範囲が存在する。</li>
+  <li>その範囲でアクションチャンクを確定し、把持まで再推論を挟まなければ、突っ込みすぎを減らせる。</li>
+</ul>
+<p>当初は「近いほど壊れる」と考えていたが、測定で単調な悪化が見られなかったため、上記の形に弱めた。物体スケールへの依存そのものは今回は検証していない。</p>
+
+<h2>3. 方法</h2>
+<p><b>データ収集</b>: Libero の pick&amp;place 系 2 スイート（<code>libero_spatial</code>、<code>libero_object</code>）20 タスクを各 50 エピソード、推論間隔 5 ステップで実行した。推論のたびにシミュレータ状態とチャンク全量（50 ステップ）を記録した。実行は Google Colab の G4 ランタイムで 8 並列とし、データは rclone で Google Drive に保存した。</p>
+<p><b>誤差の定義</b>: 閉指令の開始後に z 指令が下降でなくなる点をアプローチ完了とし、チャンクの先頭からアプローチ完了までの累積下降量を「計画下降量」とした。アクションからメートルへの換算係数は、実際の移動量から実測した（0.0119 m/アクション、R<sup>2</sup>=0.97）。推論間隔に依存しないよう、計画下降量はチャンク全量を基準に計算している。</p>
+<p><b>対象の絞り込み</b>: タスクの成否は問わず、アプローチ完了時に手先が対象物の近くにいないロールアウトだけ除いた。1000 本中 43 本が該当し、957 本、9,321 推論を分析した。全体の成功率は 98.0% である。</p>
+
+<h2>4. 検証結果</h2>
+<figure class="half">
+  <img src="figures/error_by_height.png" alt="推論時の高さごとの誤差">
+  <figcaption>図 1: 推論時の高さごとの誤差。正は突っ込みすぎ、負は届かない側を示す。</figcaption>
+</figure>
+<table>
+  <tr><th>推論時の高さ</th><th class="n">推論数</th><th class="n">平均</th><th class="n">p10</th><th class="n">p90</th><th>評価</th></tr>
+  <tr><td>0〜8cm</td><td class="n">2,385</td><td class="n">+1.2〜+1.4cm</td><td class="n">-0.4〜-1.6cm</td><td class="n">+3.6〜+5.0cm</td><td>残り距離に対して誤差が大きい</td></tr>
+  <tr><td><b>8〜12cm</b></td><td class="n">1,096</td><td class="n">+1.6〜+2.3cm</td><td class="n">-1.6〜-1.5cm</td><td class="n"><b>+7.4〜+8.7cm</b></td><td>最も悪い。突っ込み側の裾が大きい</td></tr>
+  <tr><td><b>14〜20cm</b></td><td class="n">1,979</td><td class="n">0.0〜+0.6cm</td><td class="n">-2.4〜-1.6cm</td><td class="n">+2.3〜+2.9cm</td><td>最も安定。偏りが小さい</td></tr>
+  <tr><td>25〜30cm</td><td class="n">659</td><td class="n">-1.7cm</td><td class="n">-4.8cm</td><td class="n">+1.2cm</td><td>届かない側に寄る</td></tr>
+</table>
+<p>計画の精度は距離に対して単調ではなく、14〜20cm が最も安定し、8〜12cm で急に悪化した。仮説の「適切な距離の範囲がある」と整合する結果である。</p>
+<p>誤差の大きいロールアウトを動画で確認すると、手先が止まった後も方策が下降指令を出し続け、チャンクは対象物より 15cm 以上下を計画していた。誤差の大きいチャンクは再推論で実行前に置き換わることが多く、タスク自体は成功していた。手先が止まる原因は接触と見ているが、接触力は測っていない。上位 5 件を同じ状態から 16 回推論し直しても誤差は再現し（平均 +13.5〜+19.3cm）、サンプリングのばらつきではなかった。</p>
+
+<h2>5. 対策</h2>
+<p>距離が適切なうちにチャンクを確定し、把持まで再推論を止める機能を <code>scripts/rollout.py</code> に実装した。</p>
+<ul>
+  <li>推論のたびにチャンクを積分し、予定軌道の最下点までの距離を求める。対象物の位置は使わない。</li>
+  <li>距離が発動距離を下回ったら、アプローチ完了の 10 ステップ後まで再推論を止める。</li>
+  <li>発動距離を次の間隔の途中で横切る場合は、推論を前倒しする。</li>
+  <li>上昇中、閉指令後、横移動が主の軌道では発動しない。1 エピソードに 1 回だけ発動する。</li>
+</ul>
+<p>発動距離 16 / 12 / 8cm を、誤差上位 100 本とランダム 100 本の計 200 本で、同じタスク、エピソード、シードのまま比較した。動画と以下の結果は 16cm 条件である。</p>
+
+<h2>6. 対策の結果</h2>
+<p>指標は過剰下降ステップ数（下降指令中に高さが動かなかったステップ数の平均）である。対策なしの 1000 本で、このステップ数が 5 以上のロールアウトが 30% 以上あるタスクを過剰下降タスクとした。効果の方向が逆の層を混ぜた平均には意味がないため、層別に評価した。p 値は対応のある符号検定による。</p>
+<table>
+  <tr><th>層</th><th class="n">本数</th><th class="n">過剰下降ステップ数</th><th class="n">p 値</th><th class="n">成功率</th></tr>
+  <tr><td>机上の物体タスク（object 1, 4, 5, 6, 8）</td><td class="n">46</td><td class="n"><b>9.17 → 6.07</b></td><td class="n">0.07</td><td class="n">100% → 100%</td></tr>
+  <tr><td>棚のタスク（spatial 4）</td><td class="n">33</td><td class="n"><b>5.55 → 7.15</b>（悪化）</td><td class="n">0.05</td><td class="n">100% → 97.0%</td></tr>
+  <tr><td>過剰下降の少ないタスク</td><td class="n">121</td><td class="n">1.29 → 1.41</td><td class="n">0.36</td><td class="n">96.7% → 96.7%</td></tr>
+</table>
+<figure>
+  <div class="pair"><img src="figures/before.jpg" alt="対策なし"><img src="figures/after.jpg" alt="対策あり"></div>
+  <figcaption>図 2: object task 1 ep 1。左は対策なしで、手先の停止後も計画が沈み続ける。右は対策ありで、誤差の小さい推論（必要 13.5cm／計画 14.8cm）を固定して実行し、過剰下降が 23 → 5 ステップに減った。</figcaption>
+</figure>
+
+<h2>7. 考察</h2>
+<p>棚のタスクで効果が出なかった原因として、次の 3 つを考えている。いずれも切り分けには追加の検証が必要である。</p>
+<ol>
+  <li><b>適切な高さを既に下回っている</b>: 対象物が棚の上にあるので、リストカメラで捉えた時点で既に深度推定に最適な高さを下回っている。</li>
+  <li><b>リストカメラの効きが限定的</b>: 事前学習で机面の高さまで下降するショートカットが組み込まれ、その支配力のほうが強い。</li>
+  <li><b>推論を固定する基準がずれている</b>: 机面の高さが確定でわからないため、固定する高さを計画深度から決めている。発動時の「計画深度 - 実際の高さ」は、机上の物体タスクで平均 +3.6cm、棚のタスクで平均 +9.2cm（p10〜p90: +7.9〜+10.8cm）だった。棚のタスクでは、16cm の想定が実際は約 6cm で発動していた。</li>
+</ol>
+<p>棚のタスクのずれが安定していることは、方策が棚より低い面を目標にしている可能性を示す。ただし、これは相関であり、因果は未検証である。</p>
+
+<h2>8. 工夫した点</h2>
+<ul>
+  <li><b>再現性</b>: ロールアウトごとに種を蒔き直し、推論の初期ノイズを実行順に依存しない形で決めた。これにより、8 並列でも特定の推論を再現でき、記録との状態照合と、同じ状態からの繰り返し推論が可能になった。</li>
+  <li><b>測定の妥当性</b>: 中央値では見えなかった 8〜12cm の裾を、平均と p90 で確認した。把持後の下降の取りこぼしを防ぐため、アプローチ完了の定義も波形を見て修正した。</li>
+  <li><b>対策の汎用性</b>: 対策はシミュレータの対象物位置に依存せず、方策の出力だけで動く。</li>
+  <li><b>高速化</b>: Colab の EGL 設定を補い、GPU 描画を確認してから実行した。1000 ロールアウトは約 50 分で収集できた。</li>
+</ul>
+
+<h2>9. 今後の課題</h2>
+<ul>
+  <li>机上と棚の層分けを、新しいエピソードで検証する。</li>
+  <li>接触力を記録し、過剰下降の原因が接触かを確かめる。</li>
+  <li>リストカメラを遮る実験で、物体スケールへの依存と机面ショートカットの影響を切り分ける。</li>
+  <li>計画深度のずれを補正する発動基準を検討する。</li>
+</ul>
+
+</body>
+</html>
