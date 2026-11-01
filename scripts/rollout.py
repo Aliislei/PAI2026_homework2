@@ -5,6 +5,7 @@
     python rollout.py <ワーカー番号> <発動距離 m>  対策ありの対象ロールアウト
 """
 import json
+import os
 import pathlib
 import random
 import sys
@@ -47,7 +48,8 @@ REPEATS = 16  # 1 つの状態に対する繰り返し推論の回数
 LOCAL_DIR = pathlib.Path("/content/results")
 EPISODE_DIR = LOCAL_DIR / "episodes"
 ARCHIVE = pathlib.Path("/content/results.tar.gz")
-REMOTE_ARCHIVE = "remote:pai_homework2/approach_analysis/results.tar.gz"
+REMOTE_ROOT = os.environ.get("RCLONE_REMOTE_ROOT", "remote:pai_homework2")  # rclone の保存先
+REMOTE_ARCHIVE = f"{REMOTE_ROOT}/approach_analysis/results.tar.gz"
 RCLONE_CONF = "/content/rclone.conf"
 EPISODE_DIR.mkdir(parents=True, exist_ok=True)
 

@@ -40,7 +40,7 @@ Physical AI 応用編1 講座の最終課題「AI×ロボティクスによる�
 - **モデル**: pi05 の Libero チューニング済みモデル（v44）。`lerobot/pi05_libero_finetuned_v044`、チャンク長は50ステップ
 - **環境**: 無印 Libero を Google Colab 上で動かす
 - **Colab の用途**: データ収集と動画作成
-- **データのやり取り**: rclone で Google Drive を経由する。保存先は `remote:pai_homework2/`
+- **データのやり取り**: rclone で Google Drive を経由する。保存先は環境変数 `RCLONE_REMOTE_ROOT` で指定する
 - **VM**: `colab` CLI で G4 を操作する。手順は `doc/colab_vm.md` を参照する。使い終わったら必ず `colab stop` する
 - **共通処理**: `scripts/rollout.py`（モデル、環境、ロールアウト、対策）
 - **ノートブック**: `notebooks/collect_and_analyze.ipynb`（データ収集、分析、問題抽出）、`notebooks/atomic_compare.ipynb`（対策の比較）、`notebooks/render_videos.ipynb`（動画作成）

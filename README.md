@@ -40,7 +40,7 @@ Google Colab の G4 ランタイムで実行します。VM の手順は `doc/col
 2. `notebooks/atomic_compare.ipynb` で、対策ありの比較を行う
 3. `notebooks/render_videos.ipynb` で、動画を作る
 
-保存先の Drive のパスは、ノートブック内の設定を環境に合わせて変更してください。
+保存先は、環境変数 `RCLONE_REMOTE_ROOT` で rclone のリモートとフォルダを指定してください。
 
 ## 使用モデルと環境
 
